@@ -1,6 +1,5 @@
 // static/js/main.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Elementos principais
     const narrativeContainer = document.getElementById('narrative-container');
     const commandInput = document.getElementById('command-input');
     const sendCommandBtn = document.getElementById('send-command-btn');
@@ -11,24 +10,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Variáveis de estado
     let gameStarted = false;
     let processingCommand = false;
-    let currentCommandId = null;
     let pollingInterval = null;
+    const POLLING_INTERVAL_MS = 2000; // Check status every 2 seconds
 
-    // Verifica colapsáveis
     const collapsibles = document.querySelectorAll('.collapsible-header');
     collapsibles.forEach(header => {
         header.addEventListener('click', function() {
             const parent = this.parentElement;
             parent.classList.toggle('active');
-            // Opcional: Gerenciar ícone de expandir/colapsar
-            const icon = this.querySelector('.collapse-icon');
+            const icon = this.querySelector('.fa-chevron-down, .fa-chevron-up'); // More specific selector
             if (icon) {
-                icon.textContent = parent.classList.contains('active') ? '-' : '+';
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
             }
         });
     });
 
-    // Carrega informações do personagem inicialmente e a cada atualização relevante
     function loadCharacterInfo() {
         fetch('/character')
             .then(response => {
@@ -40,95 +37,148 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     const character = data.character;
-
-                    // Atualiza informações básicas
+                    // Update basic info
                     document.getElementById('char-class').textContent = character.classe || 'N/A';
                     document.getElementById('char-race').textContent = character.raca || 'N/A';
                     document.getElementById('char-level').textContent = character.nivel || 'N/A';
 
-                    // Atualiza barra de vida
-                    const healthPercentage = (character.pv_atual / character.pv_maximo) * 100;
-                    document.getElementById('health-bar-fill').style.width = `${healthPercentage}%`;
-                    document.getElementById('health-text').textContent = `${character.pv_atual}/${character.pv_maximo}`;
+                    // Update health bar using CORRECTED keys from personagem.json
+                    const maxHealth = character.pv_maximo || 0;
+                    const currentHealth = character.pv_atual || 0;
+                    const healthPercentage = maxHealth > 0 ? (currentHealth / maxHealth) * 100 : 0;
+                    const healthBarFill = document.getElementById('health-bar-fill');
+                    const healthText = document.getElementById('health-text');
 
-                    // Atualiza atributos
-                    document.getElementById('attr-str').textContent = character.atributos.forca;
-                    document.getElementById('attr-dex').textContent = character.atributos.destreza;
-                    document.getElementById('attr-con').textContent = character.atributos.constituicao;
-                    document.getElementById('attr-int').textContent = character.atributos.inteligencia;
-                    document.getElementById('attr-wis').textContent = character.atributos.sabedoria;
-                    document.getElementById('attr-cha').textContent = character.atributos.carisma;
+                    if(healthBarFill) healthBarFill.style.width = `${healthPercentage}%`;
+                    if(healthText) healthText.textContent = `${currentHealth}/${maxHealth}`;
 
-                    // Atualiza listas de magias e equipamento
-                    const spellList = document.getElementById('spell-list');
-                    spellList.innerHTML = ''; // Limpa a lista anterior
-                    if (character.magias_conhecidas && character.magias_conhecidas.length > 0) {
-                        character.magias_conhecidas.forEach(spell => {
-                            const li = document.createElement('li');
-                            li.textContent = spell;
-                            spellList.appendChild(li);
-                        });
-                    } else {
-                        spellList.innerHTML = '<li>Nenhuma magia conhecida</li>';
+
+                    // Update attributes
+                    if (character.atributos) {
+                        document.getElementById('attr-str').textContent = character.atributos.forca ?? 'N/A';
+                        document.getElementById('attr-dex').textContent = character.atributos.destreza ?? 'N/A';
+                        document.getElementById('attr-con').textContent = character.atributos.constituicao ?? 'N/A';
+                        document.getElementById('attr-int').textContent = character.atributos.inteligencia ?? 'N/A';
+                        document.getElementById('attr-wis').textContent = character.atributos.sabedoria ?? 'N/A';
+                        document.getElementById('attr-cha').textContent = character.atributos.carisma ?? 'N/A';
                     }
 
+                    // Update lists using CORRECTED keys
+                    const spellList = document.getElementById('spell-list');
+                    if (spellList) {
+                        spellList.innerHTML = ''; // Clear previous list
+                        if (character.magias_conhecidas && character.magias_conhecidas.length > 0) {
+                            character.magias_conhecidas.forEach(spell => {
+                                const li = document.createElement('li');
+                                li.textContent = spell;
+                                spellList.appendChild(li);
+                            });
+                        } else {
+                            spellList.innerHTML = '<li>Nenhuma magia conhecida</li>';
+                        }
+                    }
 
                     const equipmentList = document.getElementById('equipment-list');
-                    equipmentList.innerHTML = ''; // Limpa a lista anterior
-                    if (character.equipamento && character.equipamento.length > 0) {
-                        character.equipamento.forEach(item => {
-                            const li = document.createElement('li');
-                            li.textContent = item;
-                            equipmentList.appendChild(li);
-                        });
-                    } else {
-                         equipmentList.innerHTML = '<li>Nenhum equipamento</li>';
+                     if (equipmentList) {
+                        equipmentList.innerHTML = ''; // Clear previous list
+                        if (character.equipamento && character.equipamento.length > 0) {
+                            character.equipamento.forEach(item => {
+                                const li = document.createElement('li');
+                                li.textContent = item;
+                                equipmentList.appendChild(li);
+                            });
+                        } else {
+                            equipmentList.innerHTML = '<li>Nenhum equipamento</li>';
+                        }
                     }
 
                 } else {
                      console.warn('Falha ao carregar dados do personagem:', data.error || 'Erro desconhecido');
-                     // Poderia exibir uma mensagem para o usuário aqui
                 }
             })
-            .catch(error => console.error('Erro ao carregar informações do personagem:', error));
+            .catch(error => {
+                console.error('Erro ao carregar informações do personagem:', error);
+                // Display error to user?
+                 const charDetails = document.querySelector('.character-details');
+                 if(charDetails) charDetails.innerHTML = '<p style="color: var(--danger-color);">Erro ao carregar personagem.</p>';
+            });
+    }
+    // --- Fim Funções de Colapsáveis e LoadCharacterInfo ---
+
+
+    // Renderiza APENAS NOVOS itens no histórico
+    function renderHistory(historyItems) {
+        if (!Array.isArray(historyItems) || historyItems.length === 0) {
+
+            return;
+        }
+
+        const startPrompt = narrativeContainer.querySelector('.start-prompt');
+        if (startPrompt) {
+            narrativeContainer.removeChild(startPrompt);
+        }
+
+        // Renderiza cada NOVO item
+        historyItems.forEach(item => {
+            if (!item || !item.type || !item.content) {
+                 console.warn('Skipping invalid history item:', item);
+                 return;
+            }
+            const messageDiv = document.createElement('div');
+            const typeClass = String(item.type).toLowerCase().replace(/[^a-z0-9-_]/g, ''); // Sanitize type for class
+            messageDiv.classList.add('message', `message-${typeClass}`); // Ex: message-system, message-command, message-response
+
+            messageDiv.textContent = item.content;
+
+            narrativeContainer.appendChild(messageDiv);
+        });
+
+        // Rola para o final para mostrar a mensagem mais recente
+        narrativeContainer.scrollTop = narrativeContainer.scrollHeight;
+    }
+
+    // Atualiza o indicador de status
+    function updateStatus(message) {
+        // console.log("Status update:", message); // Debug
+        statusIndicator.textContent = message;
     }
 
     // Inicia o jogo
     function startGame() {
-        // Evita inícios múltiplos
         if (gameStarted) return;
+        gameStarted = true; // Mark as started early to prevent double clicks
 
         updateStatus('Iniciando aventura...');
-        startGameBtn.disabled = true; // Desabilita botão enquanto inicia
+        if(startGameBtn) startGameBtn.disabled = true;
 
         fetch('/start')
             .then(response => {
                  if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                    // Try to get error message from body
+                    return response.json().then(errData => {
+                        throw new Error(errData.error || `HTTP error! status: ${response.status}`);
+                    }).catch(() => {
+                         throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                 }
                 return response.json();
             })
             .then(data => {
                 if (data.success) {
-                    gameStarted = true;
+                    // Renderiza o histórico inicial COMPLETO recebido do /start
+                    // Precisa limpar o container antes de renderizar o histórico inicial
+                    narrativeContainer.innerHTML = '';
                     renderHistory(data.history);
-                    loadCharacterInfo(); // Carrega info do personagem no início
+                    loadCharacterInfo();
 
-                    // Habilita a entrada de comandos
                     commandInput.disabled = false;
                     sendCommandBtn.disabled = false;
                     commandInput.focus();
-
                     updateStatus('Aventura iniciada! Digite seu comando.');
 
-                    // Remove o botão de início ou o esconde
                     const startPrompt = document.querySelector('.start-prompt');
-                    if (startPrompt) {
-                       startPrompt.style.display = 'none'; // Esconde em vez de remover, caso precise depois
-                    }
-                     if (startGameBtn) {
-                        startGameBtn.style.display = 'none'; // Esconde o botão principal
-                     }
+                    if (startPrompt) startPrompt.style.display = 'none';
+                    if (startGameBtn) startGameBtn.style.display = 'none';
 
                 } else {
                     throw new Error(data.error || 'Falha ao iniciar o jogo no servidor.');
@@ -136,8 +186,9 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Erro ao iniciar jogo:', error);
-                updateStatus(`Erro ao iniciar aventura: ${error.message}. Tente recarregar a página.`);
-                startGameBtn.disabled = false; // Reabilita o botão em caso de erro
+                updateStatus(`Erro ao iniciar: ${error.message}. Tente recarregar.`);
+                if(startGameBtn) startGameBtn.disabled = false;
+                gameStarted = false; // Reset state
             });
     }
 
@@ -150,36 +201,21 @@ document.addEventListener('DOMContentLoaded', function() {
         processingCommand = true;
         commandInput.disabled = true;
         sendCommandBtn.disabled = true;
-        updateStatus('Processando comando...');
-
-        // Adiciona o comando do jogador ao histórico imediatamente (feedback visual)
-        renderHistory([{ type: 'player', content: command }]);
-
-        // Limpa o campo de entrada
+        updateStatus('Enviando comando...');
         commandInput.value = '';
 
-        // Gera um ID para o comando (se necessário, mas a API pode gerenciar)
-        currentCommandId = Date.now(); // Simples ID baseado no tempo
+        const frontendCommandId = `fe_${Date.now()}`;
 
         fetch('/command', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Adicionar CSRF token se necessário
-                // 'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                command: command,
-                // id: currentCommandId // O backend pode não precisar disso se gerenciar estado por sessão
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: command, id: frontendCommandId }) // Passando ID frontend
         })
         .then(response => {
              if (!response.ok) {
-                // Tenta ler o erro do corpo da resposta se disponível
                 return response.json().then(errData => {
                     throw new Error(errData.error || `HTTP error! status: ${response.status}`);
                 }).catch(() => {
-                    // Se não conseguir ler o corpo JSON, lança erro genérico
                     throw new Error(`HTTP error! status: ${response.status}`);
                 });
             }
@@ -187,25 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.success) {
-                // Renderiza a resposta do jogo (parte do histórico)
-                renderHistory(data.history);
-                loadCharacterInfo(); // Atualiza info do personagem após comando
-
                 if (data.ended) {
-                    // Jogo terminou
-                    endGame(data.final_message || "A aventura chegou ao fim.");
+                    renderHistory(data.history);
+                    endGame("Sessão terminada.");
+                } else if (data.processing && data.command_id) {
+                    updateStatus('Processando comando...');
+                    startPolling(data.command_id);
                 } else {
-                     // Comando processado, pronto para o próximo
-                     processingCommand = false;
-                     commandInput.disabled = false;
-                     sendCommandBtn.disabled = false;
-                     commandInput.focus();
-                     updateStatus('Aguardando seu próximo comando...');
-                    // Não precisa de polling se a resposta for síncrona
-                    // Se a resposta indicar processamento assíncrono:
-                    // if (data.processing_id) {
-                    //     startPolling(data.processing_id);
-                    // } else { ... (código acima) }
+                     throw new Error("Resposta inválida do servidor ao enviar comando.");
                 }
             } else {
                 throw new Error(data.error || 'Erro desconhecido retornado pelo servidor.');
@@ -213,203 +238,142 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Erro ao enviar comando:', error);
-            updateStatus(`Erro ao processar comando: ${error.message}. Tente novamente.`);
-            // Renderiza mensagem de erro no histórico? Opcional.
-            // renderHistory([{ type: 'error', content: `Erro: ${error.message}` }]);
+            updateStatus(`Erro: ${error.message}. Tente novamente.`);
+            renderHistory([{ type: 'error', content: `Falha ao enviar comando: ${error.message}` }]);
             processingCommand = false;
             commandInput.disabled = false;
             sendCommandBtn.disabled = false;
-            commandInput.focus(); // Permite tentar novamente
+            commandInput.focus();
         });
     }
-
-    // --- Polling não é mais necessário se a resposta do comando for síncrona ---
-    // Se precisar de polling (comandos que demoram muito no backend):
-    /*
     function startPolling(commandId) {
+        console.log(`Polling started for command ID: ${commandId}`);
         // Limpa qualquer polling anterior
         clearInterval(pollingInterval);
-        updateStatus('Aguardando resultado do comando...');
+        pollingInterval = null; // Reset interval ID
 
-        pollingInterval = setInterval(() => {
-            fetch(`/status/${commandId}`) // Endpoint de status
+        let attempts = 0;
+        const maxAttempts = 30; // Limit polling duration (e.g., 30 * 2s = 1 minute)
+
+        const poll = () => {
+            attempts++;
+            if (attempts > maxAttempts) {
+                console.error(`Polling timeout for command ${commandId}`);
+                updateStatus('Tempo limite excedido ao buscar resposta. Tente novamente.');
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                processingCommand = false;
+                commandInput.disabled = false;
+                sendCommandBtn.disabled = false;
+                return;
+            }
+
+            fetch(`/status/${commandId}`)
                 .then(response => {
                      if (!response.ok) {
-                         throw new Error(`HTTP error! status: ${response.status}`);
+                         console.warn(`Polling status check failed (HTTP ${response.status}) for ${commandId}. Attempt ${attempts}.`);
+                         if (response.status === 404) throw new Error("Status não encontrado (ID inválido?).");
+                         return null; // Indicate temporary failure, retry later
                      }
                     return response.json();
                 })
                 .then(data => {
+                    if (!data) return; // Skip if fetch failed temporarily
+
                     if (data.success) {
                         if (data.processing) {
-                            // Ainda processando, talvez atualize a mensagem
                             updateStatus(data.message || 'Processando...');
                         } else {
-                            // Processamento completo
+                            // Processamento completo!
+                            console.log(`Polling complete for ${commandId}`);
                             clearInterval(pollingInterval);
+                            pollingInterval = null;
                             processingCommand = false;
+
+                            // Renderiza as *novas* partes do histórico recebidas
+                            if (data.history_additions && data.history_additions.length > 0) {
+                                renderHistory(data.history_additions);
+                            } else {
+                                console.warn("Processing complete but no history additions received.");
+                            }
+
+                            loadCharacterInfo(); // Atualiza info do personagem após turno
+                            updateStatus('Aguardando seu próximo comando...');
+                            // Re-enable input
                             commandInput.disabled = false;
                             sendCommandBtn.disabled = false;
                             commandInput.focus();
 
-                            // Renderiza o histórico final e atualiza char info
-                            renderHistory(data.history);
-                            loadCharacterInfo();
-                            updateStatus('Aguardando seu próximo comando...');
-
-                            if (data.ended) {
-                                endGame(data.final_message || "A aventura chegou ao fim.");
-                            }
                         }
                     } else {
+                        // Erro retornado pelo /status (ex: erro durante processamento no backend)
                         throw new Error(data.error || 'Erro ao verificar status.');
                     }
                 })
                 .catch(error => {
-                    console.error('Erro ao verificar status:', error);
+                    console.error(`Erro no polling para ${commandId}:`, error);
                     clearInterval(pollingInterval);
-                    processingCommand = false; // Libera para tentar de novo
+                    pollingInterval = null;
+                    processingCommand = false;
+                    updateStatus(`Erro ao buscar resposta: ${error.message}.`);
+                     // Renderiza erro no histórico
+                     renderHistory([{ type: 'error', content: `Erro ao buscar resultado: ${error.message}` }]);
                     commandInput.disabled = false;
                     sendCommandBtn.disabled = false;
-                    updateStatus(`Erro ao obter resultado: ${error.message}. Tente novamente.`);
                 });
-        }, 2000); // Verifica a cada 2 segundos
-    }
-    */
+        };
 
-    // Renderiza o histórico da sessão
-    // Modificado para *adicionar* ao histórico existente, em vez de limpar
-    function renderHistory(historyItems) {
-        if (!Array.isArray(historyItems)) {
-            console.warn('renderHistory recebeu dados que não são um array:', historyItems);
-            return;
-        }
-
-        // Limpa qualquer conteúdo de início, se ainda existir
-        const startPrompt = narrativeContainer.querySelector('.start-prompt');
-        if (startPrompt) {
-            narrativeContainer.removeChild(startPrompt);
-        }
-
-        // Renderiza cada novo item do histórico
-        historyItems.forEach(item => {
-            const messageDiv = document.createElement('div');
-            // Adiciona classe base 'message' e classe específica do tipo
-            messageDiv.classList.add('message', `message-${item.type}`); // Ex: message-narrative, message-player
-
-            // Usa textContent para segurança contra XSS
-            messageDiv.textContent = item.content;
-
-            narrativeContainer.appendChild(messageDiv);
-        });
-
-        // Rola para o final para mostrar a mensagem mais recente
-        narrativeContainer.scrollTop = narrativeContainer.scrollHeight;
+        poll();
+        pollingInterval = setInterval(poll, POLLING_INTERVAL_MS);
     }
 
-    // Atualiza o indicador de status
-    function updateStatus(message) {
-        statusIndicator.textContent = message;
-    }
-
-    // Finaliza o jogo
     function endGame(finalMessage = "A aventura terminou.") {
+        console.log("Game ending.");
         gameStarted = false;
         processingCommand = false;
-        clearInterval(pollingInterval); // Garante que qualquer polling pare
+        clearInterval(pollingInterval);
+        pollingInterval = null;
 
-        // Desabilita entrada de comandos permanentemente (para esta sessão)
         commandInput.disabled = true;
         sendCommandBtn.disabled = true;
-
-        // Atualiza o status final
         updateStatus(finalMessage);
-
-        // Opcional: Adicionar uma mensagem final clara no container da narrativa
-        // A resposta do comando final já deve ter feito isso via renderHistory
-        // Mas podemos adicionar uma linha extra se quisermos:
-        // const endDiv = document.createElement('div');
-        // endDiv.className = 'message message-system message-end'; // Classes CSS para estilização
-        // endDiv.textContent = "--- FIM DO JOGO ---";
-        // narrativeContainer.appendChild(endDiv);
-        // narrativeContainer.scrollTop = narrativeContainer.scrollHeight;
-
-        // Opcional: Mostrar um botão de "Jogar Novamente" que recarregue a página
-        // const restartButton = document.createElement('button');
-        // restartButton.textContent = 'Jogar Novamente';
-        // restartButton.className = 'restart-button'; // Classe para estilizar
-        // restartButton.onclick = () => window.location.reload();
-        // // Adicionar o botão em algum lugar apropriado, talvez abaixo do input
-        // document.querySelector('.command-area').appendChild(restartButton); // Exemplo
     }
 
     // --- Event Listeners ---
-
-    // Botão Iniciar Jogo
     if (startGameBtn) {
         startGameBtn.addEventListener('click', startGame);
     } else {
-         // Se o botão não existe, talvez o jogo deva começar automaticamente
-         // ou já estar em andamento (verificar estado no backend?)
          console.warn("Botão 'start-game-btn' não encontrado.");
-         // Poderia tentar iniciar o jogo se não encontrar o botão e o jogo não tiver começado
-         // if (!gameStarted) { startGame(); } // Cuidado com loops indesejados
     }
 
-
-    // Botão Enviar Comando
     if (sendCommandBtn) {
         sendCommandBtn.addEventListener('click', sendCommand);
     }
 
-    // Input de Comando (Enter para enviar)
     if (commandInput) {
         commandInput.addEventListener('keypress', function(event) {
-            // Verifica se a tecla pressionada é Enter (key code 13 ou 'Enter')
             if (event.key === 'Enter' || event.keyCode === 13) {
-                 event.preventDefault(); // Previne o comportamento padrão do Enter (ex: submit de form)
-                 sendCommand(); // Chama a função de enviar comando
+                 event.preventDefault();
+                 sendCommand();
             }
         });
     }
 
-    // Botões de Sugestão
     suggestions.forEach(suggestion => {
         suggestion.addEventListener('click', function() {
-            // Só permite usar sugestões se o jogo estiver rodando e não processando
             if (gameStarted && !processingCommand) {
-                const suggestedCommand = this.getAttribute('data-command') || this.textContent;
+                // Usa 'data-command' se existir, senão textContent
+                const suggestedCommand = this.dataset.command || this.textContent;
                 commandInput.value = suggestedCommand;
-                commandInput.focus(); // Foca no input para que o usuário possa editar ou enviar
-                // Opcional: Enviar o comando diretamente ao clicar na sugestão
-                // sendCommand();
+                commandInput.focus();
             }
         });
     });
 
     // --- Inicialização ---
     updateStatus('Pronto para iniciar a aventura.');
-    commandInput.disabled = true; // Desabilitado até o jogo começar
+    commandInput.disabled = true;
     sendCommandBtn.disabled = true;
-    loadCharacterInfo(); // Carrega info do personagem ao carregar a página
+    loadCharacterInfo(); // Carrega info inicial do personagem
 
 });
-
-// Função auxiliar para pegar cookies (se necessário para CSRF)
-/*
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-*/

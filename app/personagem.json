@@ -11,12 +11,21 @@
     "sabedoria": 11,
     "carisma": 13
   },
-  "hp": 8,
+  "pv_maximo": 8,
+  "pv_atual": 8,
   "ca": 12,
-  "magias": {
-    "truques": ["Prestidigitação", "Raio de Gelo", "Luz"],
-    "feiticos": ["Mísseis Mágicos", "Sono"]
-  },
-  "inventario": ["Cajado arcano", "Grimório", "Poção de cura", "10 PO"],
+  "magias_conhecidas": [
+    "Prestidigitação",
+    "Raio de Gelo",
+    "Luz",
+    "Mísseis Mágicos",
+    "Sono"
+  ],
+  "equipamento": [
+    "Cajado arcano",
+    "Grimório",
+    "Poção de cura",
+    "10 PO"
+  ],
   "idiomas": ["Comum", "Élfico", "Dracônico"]
 }
