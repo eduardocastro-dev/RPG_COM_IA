@@ -1,76 +1,111 @@
-# D&D Solo com CrewAI 🎲🧙‍♂️
+# D&D Solo com CrewAI e Flask 🎲🧙‍♂️💻
 
-Um sistema de RPG solo baseado em D&D 5e que utiliza múltiplos agentes de IA especializados através da biblioteca CrewAI para criar uma experiência de jogo imersiva e dinâmica.
+Um sistema de RPG solo baseado em D&D 5e que utiliza múltiplos agentes de IA especializados através da biblioteca CrewAI para criar uma experiência de jogo imersiva e dinâmica, servido por uma interface web com Flask.
 
 ## 📖 Visão Geral
 
-Este projeto implementa um sistema de aventura solo para D&D 5e, onde um jogador pode explorar a "Cripta do Coração Negro" como o mago Alion. A arquitetura principal utiliza o conceito de "agentes especializados", cada um com um papel específico na experiência narrativa, todos coordenados por um Orquestrador Principal.
+Neste projeto, você explora a **Cripta do Coração Negro** como o mago **Alion**. A arquitetura é baseada em **agentes especializados**, coordenados por um Orquestrador Principal, cada um responsável por uma parte da narrativa, regras, ou interação com o mundo.
 
 ### Diagrama de Arquitetura
 
 ```
 ┌─────────────────┐
-│  Orquestrador   │
-│    Principal    │
+│  Navegador Web  │  ← HTML/CSS/JS
 └────────┬────────┘
+         │ HTTP
+         ▼
+┌─────────────────┐
+│  Servidor Flask │  ← app.py
+└────────┬────────┘
+         │ Python Calls
+         ▼
+┌─────────────────┐
+│  Motor CrewAI   │  ← main.py
+└─────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────┐
-│                                                     │
-├─────────┬─────────┬─────────┬─────────┬─────────┬───┴─────┐
-│ Agente  │ Agente  │ Agente  │ Agente  │ Agente  │ Agente  │
-│ Mestre  │ Mundo   │  NPCs   │ Regras  │Narrativo│ Combate │
-└─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
-                           │
-                           ▼
-                    ┌─────────────────┐
-                    │   Interface     │
-                    │   do Usuário    │
-                    └─────────────────┘
+│ Agentes: Orquestrador, Mestre, Mundo, NPCs, Regras, │
+│ Narrador, Combate                                   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ## 🧩 Agentes Especializados
 
-O sistema utiliza sete agentes com papéis bem definidos:
+O sistema utiliza **sete agentes** com funções bem definidas:
 
-1. **Orquestrador Principal**: Coordena todos os agentes especializados, decidindo quais devem ser acionados em cada momento.
+1. **Orquestrador Principal**: Coordena os demais agentes com base nas ações do jogador e contexto.
+2. **Agente Mestre**: Supervisiona a narrativa geral da história.
+3. **Agente Mundo**: Cria descrições ambientais e sensoriais detalhadas.
+4. **Agente NPCs**: Dá vida aos personagens não-jogadores com motivações e diálogos próprios.
+5. **Agente Regras**: Aplica as regras do D&D 5e com precisão.
+6. **Agente Combate**: Gerencia cenas de combate, calcula danos e narra ações.
+7. **Agente Narrador**: Integra todas as contribuições e gera a resposta final ao jogador.
 
-2. **Agente Mestre**: Supervisiona a narrativa e decide a direção da história.
+## ✨ Recursos da Aplicação Web
 
-3. **Agente Mundo**: Especialista em descrições ambientais detalhadas e atmosféricas.
+- Interface construída com HTML/CSS/JS puro.
+- Exibição do personagem (sidebar).
+- Campo de entrada de comandos com sugestões de ações.
+- Visualização da narrativa com diferenciação entre ações do jogador e respostas da IA.
+- Processamento assíncrono com polling para respostas em tempo real.
+- Indicador de status (iniciando, processando, aguardando comando...).
 
-4. **Agente NPCs**: Dá vida aos personagens não-jogadores com personalidades distintas.
+## 📊 Fluxo da Aplicação Web
 
-5. **Agente Regras**: Aplica as mecânicas do sistema D&D 5e com precisão.
-
-6. **Agente Narrador**: Cria a narrativa final integrando as contribuições dos outros agentes.
-
-7. **Agente Combate**: Especialista em sequências de ação, calculando danos e narrando cenas de batalha.
+1. Navegador carrega os arquivos `index.html`, `style.css`, `main.js`.
+2. O JS requisita os dados do personagem via `/character`.
+3. Jogador inicia a aventura via `/start`.
+4. Comandos são enviados para `/command` e processados pela fila `command_queue`.
+5. O servidor responde com atualizações através do endpoint `/status/<command_id>`.
 
 ## 🛠️ Requisitos
 
-- Python 3.8+
-- Dependências (instale via pip):
-  - crewai
-  - langchain_openai
-  - json (biblioteca padrão)
+- Python 3.12+
+- Flask
+- crewai
+- langchain-openai
+- python-dotenv
+
+Instale com:
+
+```bash
+pip install flask crewai langchain-openai python-dotenv
+```
 
 ## 🔑 Configuração
 
-1. Clone este repositório
-2. Instale as dependências:
-   ```
-   pip install crewai langchain_openai
-   ```
-3. Configure sua chave API da OpenAI no ambiente:
-   ```
-   export OPENAI_API_KEY=sua_chave_aqui
-   ```
-4. Crie um arquivo `personagem.json` na pasta raiz com os dados do seu personagem
+1. Clone o repositório:
 
-## 📝 Exemplo de Personagem JSON
+   ```bash
+   git clone <url-do-repo>
+   cd <nome-do-projeto>
+   ```
 
-Crie um arquivo `personagem.json` com o seguinte formato:
+2. Crie um ambiente virtual (opcional):
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # ou .\.venv\Scripts\activate no Windows
+   ```
+
+3. Instale as dependências (caso não tenha `requirements.txt`):
+
+   ```bash
+   pip install flask crewai langchain-openai python-dotenv
+   ```
+
+4. Configure a chave da OpenAI:
+
+   Crie um arquivo `.env` na raiz:
+
+   ```dotenv
+   OPENAI_API_KEY="sua_chave_api_aqui"
+   ```
+
+5. Crie o arquivo `personagem.json` com o seu personagem.
+
+## 📝 Exemplo de `personagem.json`
 
 ```json
 {
@@ -86,50 +121,52 @@ Crie um arquivo `personagem.json` com o seguinte formato:
     "sabedoria": 14,
     "carisma": 10
   },
-  "pv_atual": 28,
   "pv_maximo": 28,
+  "pv_atual": 28,
+  "ca": 12,
   "magias_conhecidas": [
-    "Mísseis Mágicos", 
-    "Escudo Arcano", 
-    "Bola de Fogo", 
+    "Prestidigitação",
     "Raio de Gelo",
+    "Luz",
+    "Mísseis Mágicos",
+    "Sono",
+    "Escudo Arcano",
+    "Bola de Fogo",
     "Identificação"
   ],
   "equipamento": [
-    "Cajado Arcano", 
-    "Grimório", 
-    "Bolsa de Componentes", 
-    "Poção de Cura", 
-    "Varinha da Guerra"
-  ]
+    "Cajado Arcano",
+    "Grimório",
+    "Bolsa de Componentes",
+    "Poção de Cura",
+    "Varinha da Guerra",
+    "10 PO"
+  ],
+  "idiomas": ["Comum", "Élfico", "Dracônico"]
 }
 ```
 
 ## 🚀 Uso
 
-Execute o script principal:
+Para rodar com Flask:
+
+```bash
+python app.py
+```
+
+Para rodar diretamente com terminal (sem interface):
 
 ```bash
 python main.py
 ```
 
-O jogo iniciará com uma introdução à Cripta do Coração Negro. Digite suas ações como Alion e veja como a história se desenvolve! Para sair, digite "sair", "exit" ou "quit".
-
-## 📊 Fluxo do Sistema
-
-1. **Análise da Ação**: O Orquestrador analisa a ação do jogador e decide quais agentes são necessários.
-2. **Coleta de Contribuições**: Os agentes selecionados contribuem com sua especialidade.
-3. **Integração Narrativa**: O Narrador integra todas as contribuições em uma narrativa coesa.
-4. **Saída para o Jogador**: A narrativa final é apresentada ao jogador.
+O servidor ficará disponível em `http://127.0.0.1:5000`.
 
 ## 🎮 Exemplo de Interação
 
 ```
 🎲 D&D 5e Solo com IA: Cripta do Coração Negro
-🧙‍♂️ Você é Alion, um mago humano explorando as profundezas da sinistra Cripta do Coração Negro.
-
-📜 Introdução:
-[Descrição inicial da cripta]
+🧙‍♂️ Você é Alion, um mago humano explorando a cripta...
 
 🎮 O que Alion faz?
 > Lanço Mãos Flamejantes no esqueleto
@@ -138,35 +175,27 @@ O jogo iniciará com uma introdução à Cripta do Coração Negro. Digite suas 
 [Descrição da cena de combate]
 ```
 
-## ✨ Recursos Adicionais
-
-- **Cache de Contexto**: O sistema mantém um histórico das últimas interações para garantir continuidade narrativa.
-- **Tratamento de Erros**: Mecanismos para garantir que o jogo continue mesmo em caso de falhas nas respostas da IA.
-- **Integração Multi-agente**: As contribuições dos diferentes especialistas são combinadas para uma experiência rica.
-
 ## 🔧 Personalização
 
 Você pode personalizar:
 
-- Os agentes e suas descrições
+- Os agentes (funções e prompts em `main.py`)
 - A aventura e cenário
-- O personagem do jogador
-- O modelo LLM utilizado (alterando a linha `llm = ChatOpenAI(...)`)
+- O personagem (`personagem.json`)
+- O modelo LLM usado (gpt-3.5-turbo, gpt-4...)
+- A interface (`index.html`, `style.css`, `main.js`)
 
 ## 📝 Notas
 
-- Este sistema foi projetado para aventuras solo, mas pode ser adaptado para múltiplos jogadores.
-- O desempenho depende da qualidade do modelo LLM utilizado.
-- Considere ajustar o `temperature` para balancear criatividade e consistência narrativa.
+- A versão atual usa variáveis globais no Flask, o que **não é ideal para múltiplos usuários simultâneos**.
+- O desempenho depende da resposta da API da OpenAI.
+- Monitore os custos com uso de tokens.
+- Ajuste `temperature` para controlar criatividade vs. consistência narrativa.
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias.
+Contribuições são bem-vindas! Abra issues ou envie pull requests.
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
-
----
-
-Criado com CrewAI e LangChain 🧠✨
+Licenciado sob a licença MIT.
