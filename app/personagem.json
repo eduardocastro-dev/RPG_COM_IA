@@ -1,0 +1,22 @@
+{
+  "nome": "Alion",
+  "classe": "Mago",
+  "raca": "Humano",
+  "nivel": 1,
+  "atributos": {
+    "forca": 8,
+    "destreza": 14,
+    "constituicao": 12,
+    "inteligencia": 17,
+    "sabedoria": 11,
+    "carisma": 13
+  },
+  "hp": 8,
+  "ca": 12,
+  "magias": {
+    "truques": ["Prestidigitação", "Raio de Gelo", "Luz"],
+    "feiticos": ["Mísseis Mágicos", "Sono"]
+  },
+  "inventario": ["Cajado arcano", "Grimório", "Poção de cura", "10 PO"],
+  "idiomas": ["Comum", "Élfico", "Dracônico"]
+}
