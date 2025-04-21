@@ -1,0 +1,103 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Solo com IA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>D&D Solo com IA: Cripta do Coração Negro</h1>
+        </header>
+
+        <div class="content-area">
+            <div class="sidebar">
+                <div class="character-card">
+                    <div class="character-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h2>Alion</h2>
+                    </div>
+                    <div class="character-details">
+                        <p><span>Classe:</span> <span id="char-class">Mago</span></p>
+                        <p><span>Raça:</span> <span id="char-race">Humano</span></p>
+                        <p><span>Nível:</span> <span id="char-level">5</span></p>
+
+                        <div class="health-bar">
+                            <div class="health-bar-fill" id="health-bar-fill"></div>
+                            <span id="health-text">28/28</span>
+                        </div>
+
+                        <div class="attributes">
+                            <div class="attr"><span>FOR</span> <span id="attr-str">8</span></div>
+                            <div class="attr"><span>DES</span> <span id="attr-dex">14</span></div>
+                            <div class="attr"><span>CON</span> <span id="attr-con">12</span></div>
+                            <div class="attr"><span>INT</span> <span id="attr-int">18</span></div>
+                            <div class="attr"><span>SAB</span> <span id="attr-wis">14</span></div>
+                            <div class="attr"><span>CAR</span> <span id="attr-cha">10</span></div>
+                        </div>
+
+                        <div class="collapsible">
+                            <div class="collapsible-header">
+                                <span>Magias</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <ul id="spell-list">
+                                    <!-- Preenchido via JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="collapsible">
+                            <div class="collapsible-header">
+                                <span>Equipamento</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <ul id="equipment-list">
+                                    <!-- Preenchido via JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="narrative-container" id="narrative-container">
+                    <!-- Conteúdo da narrativa será inserido aqui -->
+                    <div class="start-prompt">
+                        <p>Bem-vindo à Cripta do Coração Negro!</p>
+                        <p>Clique no botão abaixo para começar sua aventura.</p>
+                        <button id="start-game-btn" class="btn">Iniciar Aventura</button>
+                    </div>
+                </div>
+
+                <div class="command-area">
+                    <div class="command-input">
+                        <input type="text" id="command-input" placeholder="O que Alion fará?" disabled>
+                        <button id="send-command-btn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="command-suggestions">
+                        <span class="suggestion" data-cmd="Examinar a sala">Examinar a sala</span>
+                        <span class="suggestion" data-cmd="Lançar Detectar Magia">Detectar Magia</span>
+                        <span class="suggestion" data-cmd="Procurar armadilhas">Procurar armadilhas</span>
+                        <span class="suggestion" data-cmd="Avançar com cautela">Avançar</span>
+                    </div>
+                    <div class="status-indicator" id="status-indicator">
+                        <span class="status-text">Aguardando início da aventura...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
