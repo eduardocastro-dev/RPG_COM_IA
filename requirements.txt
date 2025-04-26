@@ -1,4 +1,4 @@
 crewai
-langchain
-openai
+langchain_openai
 python-dotenv
+flask

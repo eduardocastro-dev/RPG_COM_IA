@@ -4,12 +4,12 @@
   "raca": "Humano",
   "nivel": 1,
   "atributos": {
-    "forca": 8,
-    "destreza": 14,
-    "constituicao": 12,
-    "inteligencia": 17,
-    "sabedoria": 11,
-    "carisma": 13
+    "Força": 10,
+    "Destreza": 14,
+    "Constituição": 12,
+    "Inteligência": 17,
+    "Sabedoria": 11,
+    "Carisma": 13
   },
   "pv_maximo": 8,
   "pv_atual": 8,
