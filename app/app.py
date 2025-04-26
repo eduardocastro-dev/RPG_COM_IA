@@ -4,10 +4,10 @@ import json
 import os
 import time
 from threading import Thread, Event
-from queue import Queue, Empty # Import Empty exception
+from queue import Queue, Empty
 
 # Importa o sistema de jogo
-from main import executar_turno
+from main import processar_comando
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dnd-crewai-secret'
@@ -32,8 +32,8 @@ def process_commands():
             print(f"Processing command {command_id}: {command_text}")
 
             try:
-                # Executa o comando no sistema de jogo
-                response_obj = executar_turno(command_text)
+                # Usa a função correta do main.py para processar o comando
+                response_obj = processar_comando(command_text)
                 response_str = str(response_obj)
                 print(f"Response for {command_id} generated.")
                 # Store successful response
@@ -93,8 +93,8 @@ def start_game():
         print("Starting game...")
         # Use a distinct command for intro observation
         intro_command = "Descreva a entrada da Cripta do Coração Negro e os primeiros passos de Alion dentro dela."
-        intro_response_obj = executar_turno(intro_command)
-        intro_response_str = str(intro_response_obj)
+        # Process the command directly instead of using CrewAI here
+        intro_response_str = processar_comando(intro_command)
         print("Intro response received.")
 
         # Add intro messages to history
